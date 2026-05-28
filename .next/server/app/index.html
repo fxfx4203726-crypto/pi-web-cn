@@ -1,20 +1,25 @@
-<!DOCTYPE html><html lang="en" class="__variable_66b8ca"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" href="/_next/static/media/7deddc85b7ffd1dc-s.p.woff2" as="font" crossorigin="" type="font/woff2"/><link rel="preload" href="/_next/static/media/ec14413c594b3356-s.p.woff2" as="font" crossorigin="" type="font/woff2"/><link rel="stylesheet" href="/_next/static/css/d8436f2994e6e1d7.css" data-precedence="next"/><link rel="preload" as="script" fetchPriority="low" href="/_next/static/chunks/webpack-ad38c2f261198cae.js"/><script src="/_next/static/chunks/4bd1b696-215e5051988c3dde.js" async=""></script><script src="/_next/static/chunks/794-4d0b7b700451cc43.js" async=""></script><script src="/_next/static/chunks/main-app-bd11c9df37a8ab8e.js" async=""></script><script src="/_next/static/chunks/547-5c22169325cbbece.js" async=""></script><script src="/_next/static/chunks/app/page-1ab94151e0f0daf8.js" async=""></script><meta name="next-size-adjust" content=""/><title>Rz 智能体 v0.1.2</title><meta name="description" content="Rz 编程智能体 v0.1.2"/><link rel="icon" href="/favicon.ico?8aa486c701a3d218" type="image/x-icon" sizes="512x512"/><script>(function(){try{var t=localStorage.getItem("rz-theme");if(t==="dark")document.documentElement.classList.add("dark")}catch(e){}})();</script><script src="/_next/static/chunks/polyfills-42372ed130431b0a.js" noModule=""></script>
+<!DOCTYPE html><html lang="en" class="__variable_66b8ca"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" href="/_next/static/media/7deddc85b7ffd1dc-s.p.woff2" as="font" crossorigin="" type="font/woff2"/><link rel="preload" href="/_next/static/media/ec14413c594b3356-s.p.woff2" as="font" crossorigin="" type="font/woff2"/><link rel="stylesheet" href="/_next/static/css/d8436f2994e6e1d7.css" data-precedence="next"/><link rel="preload" as="script" fetchPriority="low" href="/_next/static/chunks/webpack-ad38c2f261198cae.js"/><script src="/_next/static/chunks/4bd1b696-215e5051988c3dde.js" async=""></script><script src="/_next/static/chunks/794-4d0b7b700451cc43.js" async=""></script><script src="/_next/static/chunks/main-app-bd11c9df37a8ab8e.js" async=""></script><script src="/_next/static/chunks/547-5c22169325cbbece.js" async=""></script><script src="/_next/static/chunks/app/page-1ab94151e0f0daf8.js" async=""></script><meta name="next-size-adjust" content=""/><title>Rz 智能体 v0.1.1</title><meta name="description" content="Rz 编程智能体 v0.1.1"/><link rel="icon" href="/favicon.ico?8aa486c701a3d218" type="image/x-icon" sizes="512x512"/><script>(function(){try{var t=localStorage.getItem("rz-theme");if(t==="dark")document.documentElement.classList.add("dark")}catch(e){}})();</script><script src="/_next/static/chunks/polyfills-42372ed130431b0a.js" noModule=""></script>
+
+
 <script>
 (function(){
-  var lastCheckKey = 'rz-pi-update-last-shown';
-  var today = new Date().toISOString().slice(0,10);
-  if (localStorage.getItem(lastCheckKey) === today) return;
-  
-  fetch('/update-check.json').then(function(r){return r.json()}).then(function(d){
-    if (!d.hasUpdate) return;
-    localStorage.setItem(lastCheckKey, today);
-    
-    var banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#f59e0b;color:#000;padding:10px 16px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px';
-    banner.innerHTML = '\u26a1 pi \u6709\u65b0\u7248\u672c\uff01' + d.current + ' \u2192 ' + d.latest + ' | \u6267\u884c npx @earendil-works/pi-coding-agent@latest \u66f4\u65b0 | \u70b9\u51fb\u5173\u95ed';
-    banner.onclick = function(){ banner.remove() };
-    document.body.appendChild(banner);
-  }).catch(function(){});
+  var KEY='rz-pi-update-shown';
+  var today=new Date().toISOString().slice(0,10);
+  if(localStorage.getItem(KEY)===today)return;
+  try{
+    fetch('/update-check.json',{cache:'no-store'}).then(function(r){
+      if(!r.ok)return;
+      return r.json().catch(function(){});
+    }).then(function(d){
+      if(!d||!d.hasUpdate)return;
+      localStorage.setItem(KEY,today);
+      var b=document.createElement('div');
+      b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#f59e0b;color:#000;padding:10px 16px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.2)';
+      b.textContent='\u26a1 pi \u6709\u65b0\u7248\u672c\uff01 '+d.current+' \u2192 '+d.latest+' | \u70b9\u51fb\u5173\u95ed';
+      b.onclick=function(){b.remove()};
+      document.body.appendChild(b);
+    }).catch(function(){});
+  }catch(e){}
 })();
 </script>
 
