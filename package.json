@@ -1,0 +1,37 @@
+{
+  "name": "pi-web-cn",
+  "version": "0.1.0",
+  "description": "Pi 编程智能体 Web 界面（中文版）—— 基于 @agegr/pi-web 汉化",
+  "bin": {
+    "pi-web": "bin/pi-web.js",
+    "pi-web-cn": "bin/pi-web.js"
+  },
+  "files": [
+    "bin",
+    ".next",
+    "!.next/cache",
+    "!.next/dev",
+    "!.next/**/*.js.map",
+    "public",
+    "next.config.ts",
+    "package.json"
+  ],
+  "scripts": {
+    "dev": "next dev -p 30141",
+    "build": "next build --webpack",
+    "start": "next start -p 30141",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "^0.75.5",
+    "@earendil-works/pi-coding-agent": "^0.75.5",
+    "@lobehub/icons": "^5.6.0",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "next": "16.2.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^16.1.1",
+    "remark-gfm": "^4.0.1"
+  }
+}
