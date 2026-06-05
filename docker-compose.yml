@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  pi-web-cn:
+    build: .
+    image: pi-web-cn:0.1.5
+    container_name: pi-web-cn
+    restart: unless-stopped
+    ports:
+      - "30141:30141"
+    environment:
+      - PORT=30141
+      - HOSTNAME=0.0.0.0
+      - NODE_ENV=production
+    volumes:
+      # pi agent data (sessions, models.json, skills, auth)
+      - pi-agent-data:/root/.pi/agent
+      # Mount your working directory so the agent can read/write code
+      - ./workspace:/workspace
+      # Optional: mount host home for broader file access
+      # - /home:/home:ro
+
+volumes:
+  pi-agent-data:
+    driver: local
