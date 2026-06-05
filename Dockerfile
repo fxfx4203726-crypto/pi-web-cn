@@ -28,14 +28,11 @@ COPY --from=builder /app/.next-build/standalone ./
 COPY --from=builder /app/.next-build/static ./.next-build/static
 COPY --from=builder /app/public ./public
 
-# Copy skills.zip if provided (optional, for global skill auto-install)
-COPY skills.zip /tmp/skills.zip 2>/dev/null || true
-
 # Copy entrypoint
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-# Create pi agent data directory
+# Create pi agent data directories
 RUN mkdir -p /root/.pi/agent/sessions /root/.pi/agent/skills
 
 EXPOSE 30141

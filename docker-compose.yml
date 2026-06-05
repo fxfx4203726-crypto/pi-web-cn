@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   pi-web-cn:
     build: .
@@ -17,6 +15,8 @@ services:
       - pi-agent-data:/root/.pi/agent
       # Mount your working directory so the agent can read/write code
       - ./workspace:/workspace
+      # Skills: place skills.zip in project root, then uncomment below
+      # - ./skills.zip:/tmp/skills.zip:ro
       # Optional: mount host home for broader file access
       # - /home:/home:ro
 
