@@ -11,7 +11,7 @@ export interface ToolEntry {
 export type ToolPreset = "none" | "default" | "full";
 export const PRESET_NONE: string[] = [];
 export const PRESET_DEFAULT: string[] = ["read", "bash", "edit", "write"];
-export const PRESET_FULL: string[] = ["bash", "read", "edit", "write", "grep", "find", "ls"];
+export const PRESET_FULL: string[] = ["bash", "read", "edit", "write", "grep", "find", "ls", "web_search", "code_search", "fetch_content", "get_search_content", "todo"];
 
 export function getPresetFromTools(tools: ToolEntry[]): ToolPreset {
   const active = tools.filter(t => t.active).map(t => t.name).sort().join(",");
@@ -30,7 +30,7 @@ interface Props {
 const PRESETS: { id: ToolPreset; label: string; desc: string; tools: string[] }[] = [
   { id: "none",    label: "Off",  desc: "No tools",                                tools: PRESET_NONE },
   { id: "default", label: "Low",  desc: "read · bash · edit · write",              tools: PRESET_DEFAULT },
-  { id: "full",    label: "High", desc: "read · bash · edit · write · grep · find · ls", tools: PRESET_FULL },
+  { id: "full",    label: "High", desc: "read · bash · edit · write · grep · find · ls · web_search · todo", tools: PRESET_FULL },
 ];
 
 export function ToolPanel({ tools, onPreset, onClose }: Props) {

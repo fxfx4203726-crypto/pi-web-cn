@@ -21,6 +21,7 @@ interface Props {
   onSystemPromptChange?: (prompt: string | null) => void;
   onSessionStatsChange?: (stats: { tokens: { input: number; output: number; cacheRead: number; cacheWrite: number }; cost?: number } | null) => void;
   onContextUsageChange?: (usage: { percent: number | null; contextWindow: number; tokens: number | null } | null) => void;
+  onMessagesChange?: (messages: AgentMessage[]) => void;
 }
 
 function phaseLabel(phase: AgentPhase): string {
@@ -102,7 +103,7 @@ function ElapsedTimer({ running }: { running: boolean }) {
   return <span className="ml-2 text-[11px] text-text-dim">({elapsed}s)</span>;
 }
 
-export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreated, onSessionForked, modelsRefreshKey, chatInputRef, onBranchDataChange, onSystemPromptChange, onSessionStatsChange, onContextUsageChange }: Props) {
+export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreated, onSessionForked, modelsRefreshKey, chatInputRef, onBranchDataChange, onSystemPromptChange, onSessionStatsChange, onContextUsageChange, onMessagesChange }: Props) {
   const [autoCleanedMsg, setAutoCleanedMsg] = useState<string | null>(null);
 
   const handleAutoCleaned = useCallback((msg: string) => {
@@ -167,6 +168,11 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
     onContextUsageChange?.(contextUsageRef.current);
   }, [ctxKey, onContextUsageChange]);
   useEffect(() => () => { onContextUsageChange?.(null); }, [onContextUsageChange]);
+
+  // Notify parent of message changes for TodoPanel
+  useEffect(() => {
+    onMessagesChange?.(messages);
+  }, [messages, onMessagesChange]);
 
   const onDrop = useCallback((files: File[]) => {
     chatInputRef?.current?.addImages(files);
@@ -305,7 +311,7 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
                 </div>
                 <div style={{ display: "flex", flexDirection: "row", alignItems: "baseline", gap: 14, flexShrink: 0, paddingBottom: 2 }}>
                   <span style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono)", letterSpacing: 0 }}>
-                    web <span style={{ color: "var(--text-muted)" }}>v0.1.5</span>
+                    web <span style={{ color: "var(--text-muted)" }}>v0.1.6</span>
                   </span>
                   <span style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono)", letterSpacing: 0 }}>
                     pi <span style={{ color: "var(--text-muted)" }}>v0.75.5</span>

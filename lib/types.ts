@@ -81,6 +81,7 @@ export interface ToolResultMessage {
   content: (TextContent | ImageContent)[];
   isError?: boolean;
   timestamp?: number;
+  details?: Record<string, unknown>;
 }
 
 export interface CustomMessage {
@@ -93,6 +94,26 @@ export interface CustomMessage {
 }
 
 export type AgentMessage = UserMessage | AssistantMessage | ToolResultMessage | CustomMessage;
+
+// Todo types (from @juicesharp/rpiv-todo)
+export interface TodoTask {
+  id: number;
+  subject: string;
+  description?: string;
+  activeForm?: string;
+  status: "pending" | "in_progress" | "completed" | "deleted";
+  blockedBy?: number[];
+  owner?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TodoResult {
+  action: string;
+  params: Record<string, unknown>;
+  tasks: TodoTask[];
+  nextId: number;
+  error?: string;
+}
 
 export interface SessionMessageEntry extends SessionEntryBase {
   type: "message";
