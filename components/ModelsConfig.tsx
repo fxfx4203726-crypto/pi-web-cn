@@ -635,13 +635,13 @@ function ModelDetail({
           onChange={(v) => set("input", v ? ["text", "image"] : undefined)} />
       </div>
 
-      {model.reasoning && (
-        <>
+      {<>
           <Check
             label="DeepSeek thinking compat"
             checked={hasDeepseekCompat(model)}
             onChange={(v) => onChange(setDeepseekCompat(model, v))}
           />
+          {model.reasoning && (
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <SectionTitle>Thinking level map</SectionTitle>
@@ -659,8 +659,9 @@ function ModelDetail({
               onChange={(v) => set("thinkingLevelMap", v)}
             />
           </div>
+          )}
         </>
-      )}
+      }
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <Field label="Context window (tokens)">

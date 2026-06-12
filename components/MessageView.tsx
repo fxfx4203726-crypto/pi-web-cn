@@ -470,9 +470,46 @@ function AssistantMessageView({
             "inset 0 1px 0 rgba(255,255,255,0.7)",
         }}
       >
-        {blocks.map((block, i) => (
-          <BlockView key={i} block={block} toolResults={toolResults} isStreaming={isStreaming} streamingDuration={streamingDurations.get(i) ?? (block.type === "thinking" ? thinkingDurationFromFile : undefined)} toolCallDurations={toolCallDurations} />
-        ))}
+        {blocks.length > 0 ? (
+          blocks.map((block, i) => (
+            <BlockView key={i} block={block} toolResults={toolResults} isStreaming={isStreaming} streamingDuration={streamingDurations.get(i) ?? (block.type === "thinking" ? thinkingDurationFromFile : undefined)} toolCallDurations={toolCallDurations} />
+          ))
+        ) : (
+          <div style={{ fontSize: 12, lineHeight: 1.6 }}>
+            <div style={{ color: "#dc2626", fontWeight: 600, marginBottom: 8 }}>
+              {message.errorMessage ? `⚠️ 错误：${message.errorMessage}` : "⚠️ 响应内容为空"}
+            </div>
+            <details style={{ cursor: "pointer" }}>
+              <summary style={{ color: "var(--text-dim)", fontSize: 11, marginBottom: 6 }}>
+                诊断信息
+              </summary>
+              <div style={{
+                background: "var(--bg)",
+                border: "1px solid var(--border)",
+                borderRadius: 6,
+                padding: "10px 12px",
+                fontFamily: "var(--font-mono)",
+                fontSize: 11,
+                color: "var(--text-dim)",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-all",
+                maxHeight: 200,
+                overflowY: "auto",
+              }}>
+                {JSON.stringify({
+                  model: message.model,
+                  provider: message.provider,
+                  stopReason: message.stopReason,
+                  errorMessage: message.errorMessage,
+                  contentTypes: (message.content as Array<{ type: string }> | undefined)?.map((b) => b.type),
+                  contentLength: message.content?.length ?? 0,
+                  rawContent: message.content as unknown,
+                  timestamp: message.timestamp,
+                }, null, 2)}
+              </div>
+            </details>
+          </div>
+        )}
       </div>
 
       <div style={{

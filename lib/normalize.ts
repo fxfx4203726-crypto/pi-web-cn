@@ -36,6 +36,26 @@ function cleanEmptyTextBlocks(msg: AgentMessage): AgentMessage {
   return { ...msg, content: newContent } as AgentMessage;
 }
 
+function injectErrorContent(msg: AssistantMessage): AssistantMessage {
+  const err = msg.errorMessage;
+  if (!err && msg.stopReason !== "error") return msg;
+
+  const errorText = err || "未知错误";
+  const content = Array.isArray(msg.content) ? [...msg.content] : [];
+
+  const hasText = content.some(
+    (b) => isObject(b) && b.type === "text"
+  );
+
+  if (hasText) {
+    content.push({ type: "text" as const, text: `\n\n---\n⚠️ **错误详情：**\n\`\`\`\n${errorText}\n\`\`\`` });
+  } else {
+    content.unshift({ type: "text" as const, text: `⚠️ **模型返回错误**\n\`\`\`\n${errorText}\n\`\`\`` });
+  }
+
+  return { ...msg, content };
+}
+
 export function normalizeToolCalls(msg: AgentMessage): AgentMessage {
   let normalized = msg;
 
@@ -43,11 +63,37 @@ export function normalizeToolCalls(msg: AgentMessage): AgentMessage {
   normalized = cleanEmptyTextBlocks(normalized);
 
   if (normalized.role !== "assistant") return normalized;
-  const content = (normalized as AssistantMessage).content;
-  if (!Array.isArray(content)) return normalized;
-  const toolNormalized = content.map((block) => {
+
+  const assistant = normalized as AssistantMessage;
+  let content = assistant.content;
+
+  // Handle string content (flattened by cleanEmptyTextBlocks)
+  if (typeof content === "string") {
+    content = [{ type: "text" as const, text: content }];
+  }
+  if (!Array.isArray(content)) return assistant;
+
+  // Normalize tool call blocks
+  content = content.map((block) => {
     const result = normalizeToolCallBlock(block);
     return result ?? block;
   });
-  return { ...normalized, content: toolNormalized } as AgentMessage;
+
+  let result: AssistantMessage = { ...assistant, content };
+
+  // Log empty assistant messages for debugging
+  if (content.length === 0) {
+    console.warn("[normalize] Empty assistant message:", {
+      model: assistant.model,
+      provider: assistant.provider,
+      stopReason: assistant.stopReason,
+      errorMessage: assistant.errorMessage,
+      originalContent: (normalized as AssistantMessage).content,
+    });
+  }
+
+  // Inject Pi errors as visible text in the message bubble
+  result = injectErrorContent(result);
+
+  return result as AgentMessage;
 }

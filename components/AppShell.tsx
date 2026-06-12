@@ -10,10 +10,8 @@ import { ModelsConfig } from "./ModelsConfig";
 import { SkillsConfig } from "./SkillsConfig";
 import { BranchNavigator } from "./BranchNavigator";
 import { UpdateChecker } from "./UpdateChecker";
-import { TodoPanel } from "./TodoPanel";
-import { useTodos } from "@/hooks/useTodos";
 import { useTheme } from "@/hooks/useTheme";
-import type { SessionInfo, SessionTreeNode, AgentMessage, TodoTask } from "@/lib/types";
+import type { SessionInfo, SessionTreeNode } from "@/lib/types";
 import type { ChatInputHandle } from "./ChatInput";
 
 export function AppShell() {
@@ -65,14 +63,6 @@ export function AppShell() {
   const [contextUsage, setContextUsage] = useState<{ percent: number | null; contextWindow: number; tokens: number | null } | null>(null);
   const handleContextUsageChange = useCallback((usage: { percent: number | null; contextWindow: number; tokens: number | null } | null) => {
     setContextUsage(usage);
-  }, []);
-
-  // Todo panel state
-  const [todoMessages, setTodoMessages] = useState<AgentMessage[]>([]);
-  const [todoPanelOpen, setTodoPanelOpen] = useState(false);
-  const { tasks: todoTasks, hasData: hasTodoData } = useTodos(todoMessages);
-  const handleMessagesChange = useCallback((msgs: AgentMessage[]) => {
-    setTodoMessages(msgs);
   }, []);
 
   // Single active panel — only one dropdown open at a time
@@ -467,63 +457,6 @@ export function AppShell() {
                   </svg>
                   <span>系统</span>
                 </button>
-                {/* Todo button */}
-                <button
-                  onClick={() => setTodoPanelOpen((v) => !v)}
-                  title="任务列表"
-                  style={{
-                    display: "flex", alignItems: "center", gap: 5,
-                    height: 30, padding: "0 12px",
-                    background: todoPanelOpen
-                      ? (isDark ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.7)")
-                      : (isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.45)"),
-                    border: isDark ? "1px solid rgba(255,255,255,0.10)" : "1px solid rgba(255,255,255,0.55)",
-                    borderRadius: 9,
-                    cursor: "pointer",
-                    color: todoPanelOpen ? "var(--text)" : "var(--text-muted)",
-                    fontSize: 12, whiteSpace: "nowrap", transition: "all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                    flexShrink: 0, position: "relative",
-                    boxShadow: todoPanelOpen
-                      ? (isDark
-                          ? "0 4px 12px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.06)"
-                          : "0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)")
-                      : (isDark
-                          ? "0 2px 6px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.04)"
-                          : "0 2px 6px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.7)"),
-                    backdropFilter: "blur(10px)",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.75)"; e.currentTarget.style.boxShadow = isDark ? "0 6px 18px rgba(0,0,0,0.20), 0 2px 4px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.06)" : "0 6px 18px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = todoPanelOpen ? "var(--text)" : "var(--text-muted)"; e.currentTarget.style.background = todoPanelOpen ? (isDark ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.7)") : (isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.45)"); e.currentTarget.style.boxShadow = todoPanelOpen ? (isDark ? "0 4px 12px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.06)" : "0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9)") : (isDark ? "0 2px 6px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.04)" : "0 2px 6px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.7)"); e.currentTarget.style.transform = "translateY(0)"; }}
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: hasTodoData ? "var(--accent)" : "var(--text-dim)", flexShrink: 0 }}>
-                    <path d="M9 11l3 3L22 4" />
-                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                  </svg>
-                  <span>任务</span>
-                  {hasTodoData && (() => {
-                    const inProgress = todoTasks.filter((t: TodoTask) => t.status === "in_progress").length;
-                    const pending = todoTasks.filter((t: TodoTask) => t.status === "pending").length;
-                    const total = inProgress + pending;
-                    if (total === 0) return null;
-                    return (
-                      <span style={{
-                        fontSize: 10, fontWeight: 600,
-                        background: inProgress > 0 ? "#2563eb" : "#6b7280",
-                        color: "#fff",
-                        borderRadius: 8,
-                        padding: "0 5px",
-                        minWidth: 16,
-                        height: 16,
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        lineHeight: 1,
-                      }}>
-                        {total}
-                      </span>
-                    );
-                  })()}
-                </button>
               </div>
             )}
             {/* Spacer pushes stats to the far right */}
@@ -659,22 +592,6 @@ export function AppShell() {
             </div>
           )}
 
-          {/* Todo panel dropdown */}
-          {todoPanelOpen && (
-            <div style={{
-              position: "fixed",
-              top: 44,
-              right: 16,
-              zIndex: 500,
-            }}>
-              <TodoPanel
-                tasks={todoTasks}
-                hasData={hasTodoData}
-                onClose={() => setTodoPanelOpen(false)}
-              />
-            </div>
-          )}
-
         </div>
 
         {/* Chat content */}
@@ -693,7 +610,6 @@ export function AppShell() {
               onSystemPromptChange={handleSystemPromptChange}
               onSessionStatsChange={handleSessionStatsChange}
               onContextUsageChange={handleContextUsageChange}
-              onMessagesChange={handleMessagesChange}
             />
           ) : showPlaceholder ? (
             activeCwd ? (

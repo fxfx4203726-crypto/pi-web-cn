@@ -338,7 +338,18 @@ export function useAgentSession(opts: UseAgentSessionOptions) {
       case "message_end": {
         const completed = event.message as AgentMessage | undefined;
         if (completed) {
-          setMessages((prev) => [...prev, normalizeToolCalls(completed)]);
+          const normalized = normalizeToolCalls(completed);
+          // Debug: log if content is empty after normalization
+          if (completed.role === "assistant" && Array.isArray(completed.content) && completed.content.length === 0) {
+            const am = completed as unknown as { model?: string; provider?: string; stopReason?: string; errorMessage?: string };
+            console.warn("[agent-event] message_end with empty content:", {
+              model: am.model,
+              provider: am.provider,
+              stopReason: am.stopReason,
+              errorMessage: am.errorMessage,
+            });
+          }
+          setMessages((prev) => [...prev, normalized]);
         }
         dispatch({ type: "reset" });
         setAgentPhase({ kind: "waiting_model" });

@@ -5,6 +5,8 @@ import type { AgentMessage, SessionInfo, SessionTreeNode } from "@/lib/types";
 import { MessageView } from "./MessageView";
 import { ChatInput, type ChatInputHandle } from "./ChatInput";
 import { ChatMinimap, useMessageRefs } from "./ChatMinimap";
+import { TodoPanel } from "./TodoPanel";
+import { useTodos } from "@/hooks/useTodos";
 import { useAgentSession, type AgentPhase } from "@/hooks/useAgentSession";
 import { useAudio } from "@/hooks/useAudio";
 import { useDragDrop } from "@/hooks/useDragDrop";
@@ -21,7 +23,6 @@ interface Props {
   onSystemPromptChange?: (prompt: string | null) => void;
   onSessionStatsChange?: (stats: { tokens: { input: number; output: number; cacheRead: number; cacheWrite: number }; cost?: number } | null) => void;
   onContextUsageChange?: (usage: { percent: number | null; contextWindow: number; tokens: number | null } | null) => void;
-  onMessagesChange?: (messages: AgentMessage[]) => void;
 }
 
 function phaseLabel(phase: AgentPhase): string {
@@ -103,7 +104,7 @@ function ElapsedTimer({ running }: { running: boolean }) {
   return <span className="ml-2 text-[11px] text-text-dim">({elapsed}s)</span>;
 }
 
-export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreated, onSessionForked, modelsRefreshKey, chatInputRef, onBranchDataChange, onSystemPromptChange, onSessionStatsChange, onContextUsageChange, onMessagesChange }: Props) {
+export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreated, onSessionForked, modelsRefreshKey, chatInputRef, onBranchDataChange, onSystemPromptChange, onSessionStatsChange, onContextUsageChange }: Props) {
   const [autoCleanedMsg, setAutoCleanedMsg] = useState<string | null>(null);
 
   const handleAutoCleaned = useCallback((msg: string) => {
@@ -128,6 +129,17 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
     modelsRefreshKey, onBranchDataChange, onSystemPromptChange,
     onAutoCleaned: handleAutoCleaned,
   });
+
+  // Task bar
+  const { tasks: todoTasks, hasData: hasTodoData } = useTodos(messages);
+  const [taskBarExpanded, setTaskBarExpanded] = useState(false);
+  const hadTodoDataRef = useRef(false);
+  useEffect(() => {
+    if (hasTodoData && !hadTodoDataRef.current) {
+      hadTodoDataRef.current = true;
+      setTaskBarExpanded(true);
+    }
+  }, [hasTodoData]);
 
   const { soundEnabled, onSoundToggle, playDoneSound } = useAudio();
   const playDoneSoundRef = useRef(playDoneSound);
@@ -168,12 +180,6 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
     onContextUsageChange?.(contextUsageRef.current);
   }, [ctxKey, onContextUsageChange]);
   useEffect(() => () => { onContextUsageChange?.(null); }, [onContextUsageChange]);
-
-  // Notify parent of message changes for TodoPanel
-  useEffect(() => {
-    onMessagesChange?.(messages);
-    return () => { onMessagesChange?.([]); };
-  }, [messages, onMessagesChange]);
 
   const onDrop = useCallback((files: File[]) => {
     chatInputRef?.current?.addImages(files);
@@ -312,7 +318,7 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
                 </div>
                 <div style={{ display: "flex", flexDirection: "row", alignItems: "baseline", gap: 14, flexShrink: 0, paddingBottom: 2 }}>
                   <span style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono)", letterSpacing: 0 }}>
-                    web <span style={{ color: "var(--text-muted)" }}>v0.1.6</span>
+                    web <span style={{ color: "var(--text-muted)" }}>v0.1.7</span>
                   </span>
                   <span style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono)", letterSpacing: 0 }}>
                     pi <span style={{ color: "var(--text-muted)" }}>v0.75.5</span>
@@ -446,6 +452,70 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
           <div className="mx-4 mb-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-[11px] text-gray-600 font-mono">
             <div>F12 → Console 查看完整日志 [pi-debug]</div>
             <div>agentRunning: {String(agentRunning)} | phase: {agentPhase?.kind ?? 'null'} | streaming: {String(streamState.isStreaming)}</div>
+          </div>
+        )}
+        {/* Task bar */}
+        {hasTodoData && (
+          <div style={{ maxWidth: 820, margin: "0 auto", padding: "0 16px 8px" }}>
+            <button
+              onClick={() => setTaskBarExpanded((v) => !v)}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                width: "100%", padding: "7px 12px",
+                background: taskBarExpanded ? "var(--bg-panel)" : "var(--bg-panel)",
+                border: "1px solid var(--border)",
+                borderRadius: taskBarExpanded ? "10px 10px 0 0" : 10,
+                borderBottom: taskBarExpanded ? "none" : "1px solid var(--border)",
+                color: "var(--text-muted)",
+                fontSize: 12, fontWeight: 500, cursor: "pointer",
+                transition: "background 0.12s, border-radius 0.12s",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--bg-panel)"; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+              </svg>
+              <span style={{ color: "var(--text)" }}>任务列表</span>
+              {(() => {
+                const completed = todoTasks.filter((t) => t.status === "completed").length;
+                const inProgress = todoTasks.filter((t) => t.status === "in_progress").length;
+                const total = todoTasks.filter((t) => t.status !== "deleted").length;
+                return (
+                  <span style={{
+                    fontSize: 11, color: "var(--text-dim)",
+                    background: "var(--bg)",
+                    padding: "1px 7px", borderRadius: 6,
+                    border: "1px solid var(--border)",
+                    fontVariantNumeric: "tabular-nums",
+                  }}>
+                    {completed}/{total}
+                    {inProgress > 0 && <span style={{ color: "#2563eb", marginLeft: 5 }}>· {inProgress} 进行中</span>}
+                  </span>
+                );
+              })()}
+              <div style={{ flex: 1 }} />
+              <span style={{ fontSize: 11, color: "var(--text-dim)" }}>{taskBarExpanded ? "收起" : "展开"}</span>
+              <svg
+                width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"
+                style={{ transform: taskBarExpanded ? "rotate(180deg)" : "none", transition: "transform 0.15s", flexShrink: 0 }}
+              >
+                <polyline points="3 5 6 8 9 5" />
+              </svg>
+            </button>
+            {taskBarExpanded && (
+              <div style={{
+                maxHeight: 280, overflowY: "auto",
+                border: "1px solid var(--border)", borderTop: "none",
+                borderRadius: "0 0 10px 10px",
+                background: "var(--bg-panel)",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+              }}>
+                <TodoPanel tasks={todoTasks} hasData={hasTodoData} />
+              </div>
+            )}
           </div>
         )}
         {chatInputElement}
