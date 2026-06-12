@@ -3,12 +3,6 @@
 import { useMemo } from "react";
 import type { AgentMessage, ToolResultMessage, TodoTask } from "@/lib/types";
 
-interface TodoToolResult {
-  tasks: TodoTask[];
-  nextId: number;
-  action: string;
-}
-
 /**
  * Extracts the latest todo task list from agent messages.
  * Scans for todo tool results and parses the task data.
@@ -76,26 +70,29 @@ export function useTodos(messages: AgentMessage[]): {
       }
     }
 
-    // Fallback: try to extract tasks from the combined text
-    // The todo tool returns human-readable text like:
-    // "Created task #1: Do something [pending]"
-    // "Updated task #1: status pending → in_progress"
-    // We'll try to parse the details from a JSON-like structure embedded in the text
+    // Fallback: scan for balanced {...} JSON that contains a "tasks" key
+    // This handles nested arrays (e.g. blockedBy) that simple regex can't match
     const combinedText = textBlocks.map((b) => b.text).join("\n");
-
-    // Try to find JSON object with tasks array in the text
-    const jsonMatch = combinedText.match(/\{[^]*"tasks"\s*:\s*\[[^\]]*\][^]*\}/);
-    if (jsonMatch) {
-      try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed && Array.isArray(parsed.tasks)) {
-          return {
-            tasks: parsed.tasks as TodoTask[],
-            hasData: true,
-          };
+    let depth = 0;
+    let start = -1;
+    for (let i = 0; i < combinedText.length; i++) {
+      if (combinedText[i] === "{") {
+        if (depth === 0) start = i;
+        depth++;
+      } else if (combinedText[i] === "}") {
+        depth--;
+        if (depth === 0 && start >= 0) {
+          const candidate = combinedText.slice(start, i + 1);
+          if (candidate.includes('"tasks"')) {
+            try {
+              const parsed = JSON.parse(candidate);
+              if (parsed && Array.isArray(parsed.tasks)) {
+                return { tasks: parsed.tasks as TodoTask[], hasData: true };
+              }
+            } catch { /* not valid JSON */ }
+          }
+          start = -1;
         }
-      } catch {
-        // Not valid JSON
       }
     }
 

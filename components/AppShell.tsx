@@ -70,7 +70,6 @@ export function AppShell() {
   // Todo panel state
   const [todoMessages, setTodoMessages] = useState<AgentMessage[]>([]);
   const [todoPanelOpen, setTodoPanelOpen] = useState(false);
-  const todoBtnRef = useRef<HTMLButtonElement>(null);
   const { tasks: todoTasks, hasData: hasTodoData } = useTodos(todoMessages);
   const handleMessagesChange = useCallback((msgs: AgentMessage[]) => {
     setTodoMessages(msgs);
@@ -470,7 +469,6 @@ export function AppShell() {
                 </button>
                 {/* Todo button */}
                 <button
-                  ref={todoBtnRef}
                   onClick={() => setTodoPanelOpen((v) => !v)}
                   title="任务列表"
                   style={{

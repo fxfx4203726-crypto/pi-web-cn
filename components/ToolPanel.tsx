@@ -11,14 +11,17 @@ export interface ToolEntry {
 export type ToolPreset = "none" | "default" | "full";
 export const PRESET_NONE: string[] = [];
 export const PRESET_DEFAULT: string[] = ["read", "bash", "edit", "write"];
-export const PRESET_FULL: string[] = ["bash", "read", "edit", "write", "grep", "find", "ls", "web_search", "code_search", "fetch_content", "get_search_content", "todo"];
+export const PRESET_FULL: string[] = ["bash", "read", "edit", "write", "grep", "find", "ls", "web_search", "code_search", "fetch_content", "get_search_content", "todo", "ctx_execute", "ctx_batch_execute", "ctx_execute_file", "ctx_index", "ctx_search", "ctx_fetch_and_index", "ctx_stats", "ctx_doctor", "ctx_upgrade", "ctx_purge", "ctx_insight"];
 
 export function getPresetFromTools(tools: ToolEntry[]): ToolPreset {
-  const active = tools.filter(t => t.active).map(t => t.name).sort().join(",");
-  if (active === "") return "none";
-  if (active === [...PRESET_DEFAULT].sort().join(",")) return "default";
-  if (active === [...PRESET_FULL].sort().join(",")) return "full";
-  return "default"; // closest match
+  const active = tools.filter(t => t.active).map(t => t.name);
+  if (active.length === 0) return "none";
+  if (active.length === PRESET_DEFAULT.length && active.every(n => PRESET_DEFAULT.includes(n))) return "default";
+  // High: all active tools are in PRESET_FULL, and includes all default tools
+  const fullSet = new Set(PRESET_FULL);
+  const includesDefault = PRESET_DEFAULT.every(n => active.includes(n));
+  if (active.length > PRESET_DEFAULT.length && active.every(n => fullSet.has(n)) && includesDefault) return "full";
+  return "default";
 }
 
 interface Props {
@@ -30,7 +33,7 @@ interface Props {
 const PRESETS: { id: ToolPreset; label: string; desc: string; tools: string[] }[] = [
   { id: "none",    label: "Off",  desc: "No tools",                                tools: PRESET_NONE },
   { id: "default", label: "Low",  desc: "read · bash · edit · write",              tools: PRESET_DEFAULT },
-  { id: "full",    label: "High", desc: "read · bash · edit · write · grep · find · ls · web_search · todo", tools: PRESET_FULL },
+  { id: "full",    label: "High", desc: "read · bash · edit · write · grep · find · ls · web_search · todo · ctx_* (+17 more)", tools: PRESET_FULL },
 ];
 
 export function ToolPanel({ tools, onPreset, onClose }: Props) {

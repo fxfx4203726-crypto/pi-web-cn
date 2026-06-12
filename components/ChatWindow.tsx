@@ -172,6 +172,7 @@ export function ChatWindow({ session, newSessionCwd, onAgentEnd, onSessionCreate
   // Notify parent of message changes for TodoPanel
   useEffect(() => {
     onMessagesChange?.(messages);
+    return () => { onMessagesChange?.([]); };
   }, [messages, onMessagesChange]);
 
   const onDrop = useCallback((files: File[]) => {

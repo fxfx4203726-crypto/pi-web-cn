@@ -107,14 +107,6 @@ export interface TodoTask {
   metadata?: Record<string, unknown>;
 }
 
-export interface TodoResult {
-  action: string;
-  params: Record<string, unknown>;
-  tasks: TodoTask[];
-  nextId: number;
-  error?: string;
-}
-
 export interface SessionMessageEntry extends SessionEntryBase {
   type: "message";
   message: AgentMessage;
